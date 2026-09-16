@@ -25,6 +25,14 @@ type Transaction struct {
 	UserID     int
 }
 
+func changeAmount(t *Transaction) {
+	t.Amount += 100
+}
+
+func changeAmount2(t Transaction) {
+	t.Amount += 100
+}
+
 func (t *Transaction) reverse() {
 	if t.Type == "expense" {
 		t.Type = "income"
@@ -72,6 +80,18 @@ func main() {
 		CategoryID: transport.ID,
 		UserID:     pavel.ID,
 	}
+
+	trans3 := Transaction{
+		Amount: 120,
+	}
+
+	fmt.Println(trans3.Amount)
+	changeAmount2(trans3)
+	fmt.Println(trans3.Amount)
+
+	fmt.Println(trans3.Amount)
+	changeAmount(&trans3)
+	fmt.Println(trans3.Amount)
 
 	fmt.Println(pavel)
 	fmt.Println(food)
