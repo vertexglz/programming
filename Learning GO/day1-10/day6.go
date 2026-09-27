@@ -2,36 +2,34 @@ package main
 
 import "fmt"
 
-type User struct {
-	ID   int
-	Name string
+type Transaction struct {
+	ID     int
+	Amount float64
+	Name   string
 }
 
 func main() {
-
-	users := map[int]User{
-		1: {ID: 1, Name: "Pavel"},
-		2: {ID: 2, Name: "Alex"},
+	transactions := map[int]Transaction{
+		1: {ID: 1, Amount: 1500, Name: "Зарплата"},
+		2: {ID: 2, Amount: -350, Name: "Продукты"},
+		3: {ID: 3, Amount: -120, Name: "Транспорт"},
 	}
 
-	fmt.Println(users[1].Name)
+	value, ok := transactions[2]
 
-	products := map[int]float64{
-		101: 1500,
-		102: 2300,
-		103: 750,
-	}
-
-	fmt.Println(products[102])
-	product, ok := products[999]
 	if ok {
-		fmt.Println(product)
+		fmt.Println(value)
 	} else {
-		fmt.Println("Товар не найден")
+		fmt.Println("Транзакция не найдена")
 	}
+	trans := transactions[2]
+	trans.Amount = -750
+	transactions[2] = trans
+	fmt.Println(transactions[2])
+	var balance float64
 
-	for id, value := range products {
-		fmt.Println(id, value)
+	for _, value := range transactions {
+		balance += value.Amount
 	}
-
+	fmt.Println(balance)
 }
