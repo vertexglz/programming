@@ -16,4 +16,22 @@ func main() {
 
 	fmt.Println(users[1].Name)
 
+	products := map[int]float64{
+		101: 1500,
+		102: 2300,
+		103: 750,
+	}
+
+	fmt.Println(products[102])
+	product, ok := products[999]
+	if ok {
+		fmt.Println(product)
+	} else {
+		fmt.Println("Товар не найден")
+	}
+
+	for id, value := range products {
+		fmt.Println(id, value)
+	}
+
 }
