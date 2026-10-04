@@ -36,3 +36,16 @@ func (w *Wallet) Withdraw(amount float64) error {
 	return nil
 
 }
+
+func Transfer(from *Wallet, to *Wallet, amount float64) error {
+	if amount <= 0 {
+		return errors.New("Некорректная сумма")
+	}
+
+	err := from.Withdraw(amount)
+	if err != nil {
+		return err
+	}
+
+	return to.Deposit(amount)
+}

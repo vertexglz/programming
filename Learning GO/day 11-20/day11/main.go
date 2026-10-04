@@ -7,7 +7,7 @@ import (
 
 func main() {
 	myWallet, err := wallet.New(1000)
-	myWallet2, err2 := wallet.New(-1000)
+	myWallet2, err2 := wallet.New(300)
 
 	if err != nil {
 		fmt.Println(err)
@@ -18,6 +18,14 @@ func main() {
 		fmt.Println(err2)
 	} else {
 		fmt.Println(myWallet2)
+	}
+
+	err3 := wallet.Transfer(&myWallet, &myWallet2, 300)
+	if err3 != nil {
+		fmt.Println(err3)
+	} else {
+		fmt.Println(myWallet.Balance())
+		fmt.Println(myWallet2.Balance())
 	}
 
 }
