@@ -27,4 +27,6 @@ func main() {
 		fmt.Println(account2.Balance())
 	}
 
+	fmt.Println("Hello World!")
+
 }
