@@ -46,6 +46,9 @@ func Transfer(from *Account, to *Account, amount float64) error {
 	if amount <= 0 {
 		return errors.New("Некорректная сумма")
 	}
+	if from == to {
+		return errors.New("Нельзя переводить самому себе")
+	}
 
 	err := from.Withdraw(amount)
 	if err != nil {
