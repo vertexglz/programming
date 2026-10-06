@@ -1,6 +1,7 @@
 package account
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -217,5 +218,49 @@ func TestNew(t *testing.T) {
 				t.Errorf("expected balance: %v, got: %v", tt.balance, account.Balance())
 			}
 		})
+	}
+}
+
+func TestWithdrawInsufficientBalance(t *testing.T) {
+	account, err := New("Pavel", 1000.00)
+	if err != nil {
+		t.Fatalf("unexpected error : %v", err)
+	}
+
+	err = account.Withdraw(1500)
+
+	if !errors.Is(err, ErrInsufficientBalance) {
+		t.Errorf("expected balance: ErrInsufficientBalance , got : %v", err)
+	}
+}
+
+func TestNewValidationError(t *testing.T) {
+	_, err := New("", 1000.00)
+
+	var validationErr ValidatorError
+
+	if !errors.As(err, &validationErr) {
+		t.Fatal("unexpected Validation Error")
+	}
+	if validationErr.Field != "owner" {
+		t.Errorf("expected field owner, got %v", validationErr.Field)
+	}
+
+	if validationErr.Value != "empty" {
+		t.Errorf("expected value empty, got %v", validationErr.Value)
+	}
+}
+
+func TestNewNegativeBalanceError(t *testing.T) {
+	_, err := New("Pavel", -100.00)
+	var validationErr ValidatorError
+	if !errors.As(err, &validationErr) {
+		t.Fatal("unexpected Validation Error")
+	}
+	if validationErr.Field != "balance" {
+		t.Errorf("expected field balance, got %v", validationErr.Field)
+	}
+	if validationErr.Value != "negative" {
+		t.Errorf("expected value negative, got %v", validationErr.Value)
 	}
 }
