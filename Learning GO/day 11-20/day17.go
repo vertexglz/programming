@@ -57,6 +57,15 @@ func addProducts(products []Product, newProduct Product) ([]Product, bool) {
 	return products, true
 }
 
+func validateProduct(product Product) error {
+	if product.Name == "" {
+		return errors.New("Имя продукта не может быть пустым")
+	} else if product.Price <= 0 {
+		return errors.New("Цена должна быть больше нуля")
+	}
+	return nil
+}
+
 func main() {
 
 	var products []Product
@@ -69,9 +78,14 @@ func main() {
 	}
 
 	newProduct := Product{
-		Name:     "Monitor",
+		Name:     "",
 		Price:    300.00,
 		Category: "Accessories",
+	}
+
+	if err := validateProduct(newProduct); err != nil {
+		fmt.Println("Некорректный товар: ", err)
+		return
 	}
 
 	products, added := addProducts(products, newProduct)
