@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 type Product struct {
@@ -15,77 +16,77 @@ type Catalog struct {
 	products []Product
 }
 
-var ErrProductNotFound = errors.New("Товар не найден")
-var ErrProductAlreadyExists = errors.New("Товар уже существует")
+var (
+	ErrProductNotFound      = errors.New("Товар не найден")
+	ErrProductAlreadyExists = errors.New("Товар уже существует")
+	ErrEmptyProductName     = errors.New("Название товара не может быть пустым")
+	ErrInvalidProductPrice  = errors.New("Цена товара должна быть больше 0")
+)
 
-func (c *Catalog) Add(product Product) error {
-	if product.Name == "" {
-		return errors.New("Название товара не может быть пустым")
+// validate проверяет корректность товара перед добавлением и обновлением.
+func validate(p Product) error {
+	if strings.TrimSpace(p.Name) == "" {
+		return ErrEmptyProductName
 	}
-	if product.Price <= 0 {
-		return errors.New("Цена товара должна быть больше 0")
+	if p.Price <= 0 {
+		return ErrInvalidProductPrice
 	}
-	for _, value := range c.products {
-		if value.Name == product.Name {
-			return ErrProductAlreadyExists
+	return nil
+}
+
+// indexOf возвращает индекс товара по названию или -1, если товара нет.
+func (c *Catalog) indexOf(name string) int {
+	for i, p := range c.products {
+		if p.Name == name {
+			return i
 		}
+	}
+	return -1
+}
+
+// Add добавляет товар в каталог; возвращает ErrProductAlreadyExists при дубликате.
+func (c *Catalog) Add(product Product) error {
+	if err := validate(product); err != nil {
+		return err
+	}
+	if c.indexOf(product.Name) != -1 {
+		return ErrProductAlreadyExists
 	}
 	c.products = append(c.products, product)
 	return nil
-
 }
 
+// Get возвращает товар по названию или ErrProductNotFound.
 func (c *Catalog) Get(name string) (Product, error) {
-	for _, value := range c.products {
-		if value.Name == name {
-			return value, nil
-		}
+	if i := c.indexOf(name); i != -1 {
+		return c.products[i], nil
 	}
 	return Product{}, ErrProductNotFound
 }
 
+// Update заменяет товар с названием name на update.
+// Обновление с переименованием на существующий товар запрещено.
 func (c *Catalog) Update(name string, update Product) error {
-	index := -1
-	for i, value := range c.products {
-		if value.Name == name {
-			index = i
-			break
-		}
-
-	}
+	index := c.indexOf(name)
 	if index == -1 {
 		return ErrProductNotFound
 	}
-	if update.Name == "" {
-		return errors.New("Имя товара не соответствует описанию")
+	if err := validate(update); err != nil {
+		return err
 	}
-	if update.Price <= 0 {
-		return errors.New("Цена товара должна быть больше 0")
-	}
-	for i, value := range c.products {
-		if value.Name == update.Name && i != index {
-			return ErrProductAlreadyExists
-		}
+	if i := c.indexOf(update.Name); i != -1 && i != index {
+		return ErrProductAlreadyExists
 	}
 	c.products[index] = update
 	return nil
-
 }
 
+// Remove удаляет товар по названию.
 func (c *Catalog) Remove(name string) error {
-	index := -1
-
-	for i, value := range c.products {
-		if value.Name == name {
-			index = i
-			break
-		}
-	}
-
+	index := c.indexOf(name)
 	if index == -1 {
 		return ErrProductNotFound
 	}
-
 	c.products = append(c.products[:index], c.products[index+1:]...)
 	return nil
 }
@@ -94,23 +95,20 @@ func main() {
 	catalog := Catalog{}
 
 	err := catalog.Add(Product{Name: "Monitor", Price: 300, Category: "Accessories"})
-
 	if err != nil {
 		fmt.Println("Ошибка добавления:", err)
 		return
 	}
 
 	product, err := catalog.Get("Monitor")
-
 	if err != nil {
-		fmt.Println("Ошибка поиска", err)
+		fmt.Println("Ошибка поиска:", err)
 		return
 	}
 	fmt.Println(product)
 
-	_, err = catalog.Get("Laptop")
-	if errors.Is(err, ErrProductNotFound) {
-		fmt.Println("Laptop: ", err)
+	if _, err = catalog.Get("Laptop"); errors.Is(err, ErrProductNotFound) {
+		fmt.Println("Laptop:", err)
 	}
 
 	err = catalog.Update("Monitor", Product{
@@ -119,28 +117,24 @@ func main() {
 		Category: "Accessories",
 	})
 	if err != nil {
-		fmt.Println("Ошибка обновления", err)
+		fmt.Println("Ошибка обновления:", err)
 		return
 	}
 
 	product, err = catalog.Get("Monitor")
-
 	if err != nil {
-		fmt.Println("Ошибка поиска", err)
+		fmt.Println("Ошибка поиска:", err)
 		return
 	}
 	fmt.Println(product)
 
-	err = catalog.Remove("Monitor")
-	if err != nil {
+	if err = catalog.Remove("Monitor"); err != nil {
 		fmt.Println("Ошибка удаления:", err)
 	} else {
 		fmt.Println("Monitor удалён")
 	}
 
-	err = catalog.Remove("Laptop")
-	if errors.Is(err, ErrProductNotFound) {
+	if err = catalog.Remove("Laptop"); errors.Is(err, ErrProductNotFound) {
 		fmt.Println("Laptop не найден")
 	}
-
 }
