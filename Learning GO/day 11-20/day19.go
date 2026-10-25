@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -91,50 +93,79 @@ func (c *Catalog) Remove(name string) error {
 	return nil
 }
 
+func (c *Catalog) Products() []Product {
+	products := []Product{}
+	for _, value := range c.products {
+		products = append(products, value)
+	}
+	return products
+}
+
+func loadProducts() ([]Product, error) {
+	data, err := os.ReadFile("products.json")
+	var products []Product
+	if errors.Is(err, os.ErrNotExist) {
+		return products, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &products)
+	if err != nil {
+		return nil, err
+	}
+	return products, nil
+}
+
+func saveProducts(products []Product) error {
+	data, err := json.MarshalIndent(products, "", "   ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile("products.json", data, 0664)
+
+}
+
+func NewCatalog(products []Product) (*Catalog, error) {
+	catalog := &Catalog{}
+
+	for _, value := range products {
+		err := catalog.Add(value)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return catalog, nil
+}
+
 func main() {
-	catalog := Catalog{}
-
-	err := catalog.Add(Product{Name: "Monitor", Price: 300, Category: "Accessories"})
+	products, err := loadProducts()
 	if err != nil {
-		fmt.Println("Ошибка добавления:", err)
+		fmt.Println(err)
 		return
 	}
-
-	product, err := catalog.Get("Monitor")
+	catalog, err := NewCatalog(products)
 	if err != nil {
-		fmt.Println("Ошибка поиска:", err)
+		fmt.Println(err)
 		return
 	}
-	fmt.Println(product)
-
-	if _, err = catalog.Get("Laptop"); errors.Is(err, ErrProductNotFound) {
-		fmt.Println("Laptop:", err)
-	}
-
-	err = catalog.Update("Monitor", Product{
-		Name:     "Monitor",
-		Price:    280,
-		Category: "Accessories",
-	})
-	if err != nil {
-		fmt.Println("Ошибка обновления:", err)
+	_, err = catalog.Get("Mouse")
+	if errors.Is(err, ErrProductNotFound) {
+		err = catalog.Add(Product{Name: "Mouse", Price: 120.00, Category: "Accessories"})
+	} else if err != nil {
+		fmt.Println(err)
 		return
-	}
-
-	product, err = catalog.Get("Monitor")
-	if err != nil {
-		fmt.Println("Ошибка поиска:", err)
-		return
-	}
-	fmt.Println(product)
-
-	if err = catalog.Remove("Monitor"); err != nil {
-		fmt.Println("Ошибка удаления:", err)
 	} else {
-		fmt.Println("Monitor удалён")
+		err = catalog.Update("Mouse", Product{Name: "Mouse", Price: 130.00, Category: "Accessories"})
 	}
-
-	if err = catalog.Remove("Laptop"); errors.Is(err, ErrProductNotFound) {
-		fmt.Println("Laptop не найден")
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	err = saveProducts(catalog.Products())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("Операция завершилась успешно")
 }
