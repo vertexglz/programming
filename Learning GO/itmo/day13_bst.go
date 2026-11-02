@@ -174,5 +174,6 @@ func main() {
 	fmt.Println(SearchBST(root, 70))
 	fmt.Println(SearchBST(root, 37))
 	fmt.Println(SearchBST(root, 45))
+	fmt.Println("Hello world!")
 
 }
